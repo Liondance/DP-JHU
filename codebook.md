@@ -11,14 +11,14 @@ to means and standard deviations are included.
 
 All feature names are of the form:
 
-<prefix><short>-<stat>-<optional axis>
+(prefix)(short)-(stat)-(optional axis)
 
 where:
 
-* <prefix> is 't' for series of measurements derived from time series data, and 'f' for measurements derived via Fourier transforms
-* <short> is a short descriptive mnemonic for the feature (measurement)
-* <stat> is 'mean' or 'std', corresponding to the mean or standard deviation of the original series
-* <optional axis> for axial data only, is 'X', 'Y', or 'Z' corresponding to the axis
+* (prefix) is 't' for series of measurements derived from time series data, and 'f' for measurements derived via Fourier transforms
+* (short) is a short descriptive mnemonic for the feature (measurement)
+* (stat) is 'mean' or 'std', corresponding to the mean or standard deviation of the original series
+* (optional axis) for axial data only, is 'X', 'Y', or 'Z' corresponding to the axis
 
 Original description
 ```
