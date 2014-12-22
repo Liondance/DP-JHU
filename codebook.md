@@ -1,9 +1,8 @@
 
 # Dataset: Human Activity Recognition Using Smartphones Dataset
 
-This dataset is a transformation of the one found here:
-
-A [link] (http://archive.ics.uci.edu/ml/datasets/Human+Activity+Recognition+Using+Smartphones)
+This dataset is a transformation of the one found in the UCI machine learning repository
+[here] (http://archive.ics.uci.edu/ml/datasets/Human+Activity+Recognition+Using+Smartphones)
 
 This dataset contains exactly 180 rows (aside from the header), one for each possible combination of
 the 30 subjects and 6 activity types in the original study. Besides the columns identifying the
@@ -33,9 +32,13 @@ These signals were used to estimate variables of the feature vector for each pat
 '-XYZ' is used to denote 3-axial signals in the X, Y and Z directions.
 ```
 
-## Complete List of features
+## Complete List of columns
+
+The data set has 68 columns: two identify the subject and activity, the remaining 66 correspond to the selected features
+Each row is uniquely identified by the first two columns: i.e. the combination subject/activity acts as a "primary key"
 
 * Subject
+* activity
 * tBodyAcc-mean-X
 * tBodyAcc-mean-Y
 * tBodyAcc-mean-Z
