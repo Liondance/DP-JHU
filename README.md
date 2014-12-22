@@ -1,6 +1,18 @@
 # Notes to graders
 
-Follow comments for the program here ...
+The program was built and tested piece by piece.
+It has been made pretty modular and simple.
+Please follow the comments and instructions in the program below.
+
+Running instructions:
+If you wish to test the program on your own, you can download and run it in your computer.
+Following the project requirements, the program assumes it is in the same directory containing 
+the 'activity_labels.txt' file and the 'test' and 'train' folders from the original dataset 
+stored in the UCI repository.
+
+I recommend having at least 12GB (16GB better) of RAM to run the program in a reasonable time.
+It takes less than 10 minutres in my 12GB system, requiring a few garbage collection cycles.
+Less RAM may get you into a situation where the garbage collector uses too much CPU time.
 
 ~~~
 #
@@ -12,14 +24,25 @@ library(sqldf)
 
 rm(list = ls());
 
+#
+# This function capitalizes names in a consistent manner
+#
 nice.name <- function(name) {
     gsub("(^|[[:space:]])([[:alpha:]])", "\\1\\U\\2", tolower(name), perl=TRUE);
 };
 
+#
+# Load activity labels and create our activity data frame for future join
+#
 raw <- read.table("activity_labels.txt", sep=" ");
 act <- data.frame(id=raw$V1, activity=factor(raw$V2, levels=raw$V2));
 act$desc <- nice.name(gsub("_", " ", act$activity));
 
+#
+# Load feature names, extracting only the ones with 'mean()' and 'std()'
+# Use the result to create the 'features' data frame
+# which contains the indices and names of the selected features
+#
 raw <- read.table("features.txt", sep=" ");
 findex <- grep("-mean\\(\\)|-std\\(\\)", raw$V2);
 fnames=raw$V2[findex];
@@ -27,8 +50,16 @@ fnames <- gsub("\\(\\)", "", fnames);
 features <- data.frame(index=findex, names=fnames);
 
 TNF <- nrow(raw); # Total Number of Fields
-raw <- NULL; # Free some memory ... (we're going to need it!)
+raw <- NULL; # Free some memory now ... (we're going to need it!)
 
+#
+# This function performs equivalent data loading and transformations
+# from the test and training sets
+#
+# @param set: 'test' or 'train' depending in the data subset
+# @param widths: vector of column widths for the fixed width reader function read.fwf
+# @param features: data frame with the indices and names of features to extract 
+#
 HAR.frame <- function(set, widths, features) {
 
     # Compute file names for the given set (i.e. test vs train)
@@ -57,12 +88,15 @@ HAR.frame <- function(set, widths, features) {
 
 FFW <- 16; # fixed field width for all fields
 
-widths = rep(FFW, TNF);
+widths = rep(FFW, TNF); # vector of fixed widths for the read.fwf data loader
 
+# Load the test set
 test  <- HAR.frame( "test", widths, features);
+
+# Load trhe training set
 train <- HAR.frame("train", widths, features);
 
-# Finally, let's put this together!
+# Finally, let's put both together!
 full <- rbind(train, test);
 
 # Prepare summary results
@@ -71,7 +105,7 @@ averages <- NULL;
 for (s in sort(unique(full$subject))) {
     for (a in sort(unique(full$activity))) {
         data <- full[full$subject == s & full$activity == a, ];
-        df <- data.frame(rbind(colMeans(data[3:68])));
+        df <- data.frame(rbind(colMeans(data[3:68]))); # this should be done in a more agnostic way!
         df <- data.frame(subject=s, activity=a, df);
         averages <- rbind(averages, df);
     }
@@ -80,109 +114,3 @@ for (s in sort(unique(full$subject))) {
 # Save result
 write.table(averages, file="averages.txt", row.names=F);
 ~~~
-## Dataset: Human Activity Recognition Using Smartphones Dataset
-
-This dataset is a transformation of the one found in the UCI machine learning repository
-[here] (http://archive.ics.uci.edu/ml/datasets/Human+Activity+Recognition+Using+Smartphones)
-
-This dataset contains exactly 180 rows (aside from the header), one for each possible combination of
-the 30 subjects and 6 activity types in the original study. Besides the columns identifying the
-subject and activity, only the averages of the measurements from the original dataset corresponding 
-to means and standard deviations are included.
-
-All feature names are of the form:
-
-<prefix><short>-<stat>-<optional axis>
-
-where:
-
-* <prefix> is 't' for series of measurements derived from time series data, and 'f' for measurements derived via Fourier transforms
-* <short> is a short descriptive mnemonic for the feature (measurement)
-* <stat> is 'mean' or 'std', corresponding to the mean or standard deviation of the original series
-* <optional axis> for axial data only, is 'X', 'Y', or 'Z' corresponding to the axis
-
-Original description
-```
-The features selected for this database come from the accelerometer and gyroscope 3-axial raw signals tAcc-XYZ and tGyro-XYZ. These time domain signals (prefix 't' to denote time) were captured at a constant rate of 50 Hz. Then they were filtered using a median filter and a 3rd order low pass Butterworth filter with a corner frequency of 20 Hz to remove noise. Similarly, the acceleration signal was then separated into body and gravity acceleration signals (tBodyAcc-XYZ and tGravityAcc-XYZ) using another low pass Butterworth filter with a corner frequency of 0.3 Hz. 
-
-Subsequently, the body linear acceleration and angular velocity were derived in time to obtain Jerk signals (tBodyAccJerk-XYZ and tBodyGyroJerk-XYZ). Also the magnitude of these three-dimensional signals were calculated using the Euclidean norm (tBodyAccMag, tGravityAccMag, tBodyAccJerkMag, tBodyGyroMag, tBodyGyroJerkMag). 
-
-Finally a Fast Fourier Transform (FFT) was applied to some of these signals producing fBodyAcc-XYZ, fBodyAccJerk-XYZ, fBodyGyro-XYZ, fBodyAccJerkMag, fBodyGyroMag, fBodyGyroJerkMag. (Note the 'f' to indicate frequency domain signals). 
-
-These signals were used to estimate variables of the feature vector for each pattern:  
-'-XYZ' is used to denote 3-axial signals in the X, Y and Z directions.
-```
-
-## Complete List of columns
-
-The data set has 68 columns: two identify the subject and activity, the remaining 66 correspond to the selected features
-Each row is uniquely identified by the first two columns: i.e. the combination subject/activity acts as a "primary key"
-
-* Subject
-* activity
-* tBodyAcc-mean-X
-* tBodyAcc-mean-Y
-* tBodyAcc-mean-Z
-* tBodyAcc-std-X
-* tBodyAcc-std-Y
-* tBodyAcc-std-Z
-* tGravityAcc-mean-X
-* tGravityAcc-mean-Y
-* tGravityAcc-mean-Z
-* tGravityAcc-std-X
-* tGravityAcc-std-Y
-* tGravityAcc-std-Z
-* tBodyAccJerk-mean-X
-* tBodyAccJerk-mean-Y
-* tBodyAccJerk-mean-Z
-* tBodyAccJerk-std-X
-* tBodyAccJerk-std-Y
-* tBodyAccJerk-std-Z
-* tBodyGyro-mean-X
-* tBodyGyro-mean-Y
-* tBodyGyro-mean-Z
-* tBodyGyro-std-X
-* tBodyGyro-std-Y
-* tBodyGyro-std-Z
-* tBodyGyroJerk-mean-X
-* tBodyGyroJerk-mean-Y
-* tBodyGyroJerk-mean-Z
-* tBodyGyroJerk-std-X
-* tBodyGyroJerk-std-Y
-* tBodyGyroJerk-std-Z
-* tBodyAccMag-mean
-* tBodyAccMag-std
-* tGravityAccMag-mean
-* tGravityAccMag-std
-* tBodyAccJerkMag-mean
-* tBodyAccJerkMag-std
-* tBodyGyroMag-mean
-* tBodyGyroMag-std
-* tBodyGyroJerkMag-mean
-* tBodyGyroJerkMag-std
-* fBodyAcc-mean-X
-* fBodyAcc-mean-Y
-* fBodyAcc-mean-Z
-* fBodyAcc-std-X
-* fBodyAcc-std-Y
-* fBodyAcc-std-Z
-* fBodyAccJerk-mean-X
-* fBodyAccJerk-mean-Y
-* fBodyAccJerk-mean-Z
-* fBodyAccJerk-std-X
-* fBodyAccJerk-std-Y
-* fBodyAccJerk-std-Z
-* fBodyGyro-mean-X
-* fBodyGyro-mean-Y
-* fBodyGyro-mean-Z
-* fBodyGyro-std-X
-* fBodyGyro-std-Y
-* fBodyGyro-std-Z
-* fBodyAccMag-mean
-* fBodyAccMag-std
-* fBodyBodyAccJerkMag-mean
-* fBodyBodyAccJerkMag-std
-* fBodyBodyGyroMag-mean
-* fBodyBodyGyroMag-std
-* fBodyBodyGyroJerkMag-mean
-* fBodyBodyGyroJerkMag-std
